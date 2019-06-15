@@ -4,7 +4,6 @@ var router = require('./router')
 var bodyParser = require('body-parser')
 var session = require('express-session')
 
-
 var app = express()
 
 app.use('/public/', express.static(path.join(__dirname, './public/')))
