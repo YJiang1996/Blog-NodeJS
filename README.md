@@ -1,4 +1,4 @@
-####  一、设计路由
+### 一、设计路由
 
 | 路径      | 请求方法 | GET参数 | POST参数                  | 备注         | 权限 |
 | --------- | -------- | ------- | ------------------------- | ------------ | ---- |
@@ -95,4 +95,64 @@ router.get('/logout',function(req,res){
     res.redirect('/login')
 })
 ````
+
+### 二、设计```Schema``` 规定 ```MongoDB``` 中 ```Collection```
+
+##### User 集合
+
+````javascript
+var mongoose = require('mongoose')
+
+mongoose.connect('mongodb://localhost/blog', { useNewUrlParser: true });
+
+var Schema = mongoose.Schema
+
+var userSchema = new Schema({
+    email: {
+        type: String,
+        required: true
+    },
+    nickname: {
+        type: String,
+        required: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    created_time: {
+        type: Date,
+        default: Date.now
+    },
+    last_modified_time: {
+        type: Date,
+        default: Date.now
+    },
+    avatar: {
+        type: String,
+        default: '/public/img/avatar-default.png'
+    },
+    bio: {
+        type: String,
+        default: ''
+    },
+    gender: {
+        type: Number,
+        enum: [-1, 0, 1],
+        default: -1
+    },
+    brithday: {
+        type: Date
+    },
+    status: {
+        type: Number,
+        enum: [0, 1, 2],
+        default: 0
+    }
+})
+
+module.exports = mongoose.model('User', userSchema)
+````
+
+### 
 

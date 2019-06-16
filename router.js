@@ -1,6 +1,8 @@
 var express = require('express')
 var User = require('./models/user')
 var md5 = require('blueimp-md5')
+var multer = require('multer')
+
 
 var router = express.Router()
 
@@ -83,9 +85,47 @@ router.post('/register', async function (req, res) {
     }
 })
 
-router.get('/logout',function(req,res){
+router.get('/logout', function (req, res) {
     req.session.user = null
     res.redirect('/login')
 })
+
+
+router.get('/settings/profile', function (req, res) {
+    // console.log(req.session.user)
+    res.render('settings/profile.html', {
+        user: req.session.user
+    })
+})
+
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, '../public/img')  //这里是图片存储路劲
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname)
+    }
+});
+var upload = multer({
+    storage: storage
+});
+
+router.post('/settings/profile', upload.single('file'), function (req, res, next) {
+    var url = 'http://' + req.headers.host + '/img/' + req.file.originalname;
+    res.json({
+        code: 200,
+        data: url
+    })
+        
+})
+
+
+// router.post('/settings/profile', async function (req, res) {
+//     try {
+//         // await 
+//     } catch (error) {
+
+//     }
+// })
 
 module.exports = router
