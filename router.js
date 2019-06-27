@@ -1,13 +1,10 @@
 var express = require('express')
 var User = require('./models/user')
 var md5 = require('blueimp-md5')
-var multer = require('multer')
-
 
 var router = express.Router()
 
 router.get('/', function (req, res) {
-    // console.log(req.session.user)
     res.render('index.html', {
         user: req.session.user
     })
@@ -31,7 +28,6 @@ router.post('/login', async function (req, res) {
                 message: '邮箱或者密码错误'
             })
         }
-        console.log(!null)
 
         req.session.user = user
 
@@ -90,42 +86,81 @@ router.get('/logout', function (req, res) {
     res.redirect('/login')
 })
 
-
 router.get('/settings/profile', function (req, res) {
-    // console.log(req.session.user)
     res.render('settings/profile.html', {
         user: req.session.user
     })
 })
 
-var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, '../public/img')  //这里是图片存储路劲
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname)
-    }
-});
-var upload = multer({
-    storage: storage
-});
+router.post('/settings/profile', async function (req, res) {
+    var body = req.body
+    body.last_modified_time = Date()
+    try {
+        await User.updateOne({ _id: body._id }, body)
 
-router.post('/settings/profile', upload.single('file'), function (req, res, next) {
-    var url = 'http://' + req.headers.host + '/img/' + req.file.originalname;
-    res.json({
-        code: 200,
-        data: url
-    })
-        
+        var user = await User.findById(body._id)
+
+        req.session.user = user
+
+        res.status(200).json({
+            err_code: 0,
+            message: 'ok'
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            err_code: 500,
+            message: error.message
+        })
+    }
 })
 
+router.get('/settings/admin', function (req, res) {
+    res.render('settings/admin.html', {
+        user: req.session.user
+    })
+})
 
-// router.post('/settings/profile', async function (req, res) {
-//     try {
-//         // await 
-//     } catch (error) {
+router.post('/settings/admin', async function (req, res) {
+    var body = req.body,
+        oldPassword = md5(md5(body.oldpassword)),
+        newPassword1 = md5(md5(body.newPassword1)),
+        newPassword2 = md5(md5(body.newPassword2)),
+        user = req.session.user
+    console.log(oldPassword, body, user)
+    if (oldPassword !== user.password) {
+        res.status(200).json({
+            err_code: 1,
+            message: '密码错误'
+        })
+    } else if (oldPassword === user.password && newPassword1 !== newPassword2) {
+        res.status(200).json({
+            err_code: 2,
+            message: '两次密码不相同'
+        })
+    } else if (oldPassword === user.password && newPassword1 === newPassword2) {
+        await User.updateOne({_id:user._id},{password:newPassword1}).then(
+            res.status(200).json({
+                err_code: 0,
+                message: '修改成功'
+            })
+        )
+        
+    } else {
+        res.status(500).json({
+            err_code: 500,
+            message: 'server error'
+        })
+    }
 
-//     }
-// })
+})
+
+router.get('/topic/new', function (req, res) {
+    res.render('topic/new.html')
+})
+
+router.post('/topic/new', async function (req, res) {
+    res.render('topic/new.html')
+})
 
 module.exports = router

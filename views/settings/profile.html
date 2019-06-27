@@ -7,24 +7,22 @@
 <section class="container">
   {{include '../_partials/settings-nav.html'}}
   <div class="col-md-5">
-    <form>
+    <form id="settings_profile_form">
       <div class="form-group">
-        <label for="exampleInputEmail1">账号</label>
-        <p class="form-control-static">{{ user.email }}</p>
-        <!-- <p class="form-control-static" onclick="alert('邮箱为登录账户不允许修改')">{{ user.email }}</p> -->
+        <label for="email">账号</label>
+        <p class="form-control-static">{{ user.email }} <input style="display:none" name="_id" value="{{ user._id }}"></p>
       </div>
       <div class="form-group">
-        <label for="exampleInputPassword1">昵称</label>
-        <input type="text" class="form-control" id="exampleInputPassword1" placeholder="" value="{{ user.nickname }}">
+        <label for="nickname">昵称</label>
+        <input type="text" class="form-control" name="nickname" value="{{ user.nickname }}">
       </div>
       <div class="form-group">
-        <label for="exampleInputPassword1">介绍</label>
-        <textarea class="form-control" rows="3"></textarea>
+        <label for="bio">介绍</label>
+        <textarea class="form-control" rows="3" name="bio" value="{{ user.bio }}">{{ user.bio }}</textarea>
       </div>
       <div class="form-group">
         <label for="exampleInputPassword1">性别</label>
         <div>
-          {{ if user.gender === -1}}
           <label class="radio-inline">
             <input type="radio" name="sex" id="inlineRadio1" value="0"> 男
           </label>
@@ -34,105 +32,50 @@
           <label class="radio-inline">
             <input type="radio" name="sex" id="inlineRadio3" value="-1" checked> 保密
           </label>
-          {{ else if user.gender === 0}}
-          <label class="radio-inline">
-            <input type="radio" name="sex" id="inlineRadio1" value="0" checked> 男
-          </label>
-          <label class="radio-inline">
-            <input type="radio" name="sex" id="inlineRadio2" value="1"> 女
-          </label>
-          <label class="radio-inline">
-            <input type="radio" name="sex" id="inlineRadio3" value="-1"> 保密
-          </label>
-          {{ else }}
-          <label class="radio-inline">
-            <input type="radio" name="sex" id="inlineRadio1" value="0"> 男
-          </label>
-          <label class="radio-inline">
-            <input type="radio" name="sex" id="inlineRadio2" value="1" checked> 女
-          </label>
-          <label class="radio-inline">
-            <input type="radio" name="sex" id="inlineRadio3" value="-1"> 保密
-          </label>
-          {{ /if }}
         </div>
       </div>
       <div class="form-group">
-        <label for="exampleInputPassword1">生日</label>
-        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="">
+        <label>生日</label>
+        <input type="text" class="form-control" name="brithday" value="{{ user.brithday }}">
       </div>
+      <div class="col-md-2 profile-avatar">
+          <dl>
+            <dt>头像设置</dt>
+            <dd style="margin-top: 5px">
+              <img class="avatar" width="150" height="150" src="{{ user.avatar }}" alt="">
+              <div id="wsh-change-userAvatar col-xs-3">
+                <button type="button" class="btn btn-default">修改头像</button>
+                <input type="file">
+              </div>
+            </dd>
+          </dl>
+        </div>
       <button type="submit" class="btn btn-success">保存</button>
     </form>
   </div>
-  <div class="col-md-2 profile-avatar">
-    <dl>
-      <dt>头像设置</dt>
-      <dd style="margin-top: 5px">
-        <img class="avatar" width="150" height="150" src="{{user.avatar}}" alt="">
 
-
-        <div class="wsh-change-userAvatar col-xs-3">
-          <button class="btn btn-default" href="">修改头像</button>
-          <input type="file" name="" id="" style="opacity :0">
-        </div>
-
-
-      </dd>
-    </dl>
-  </div>
 </section>
 
-<script src="/node_modules/jquery/dist/jquery.js">
-  $(".wsh-change-userAvatar button").click(function () {
-    $(".wsh-change-userAvatar input").on('change', function (e) {
-      var filearr = [];
-      var files = this.files;
-      for (var i = 0; i < files.length; i++) {
-        filearr.push(files[i]);
-      }
-      var formData = new FormData();
-      for (var i = 0; i < filearr.length; i++) {    //提交时，我们把filearr中的数据遍历一遍
-        formData.append("file", filearr[i]); //用append添加到formData中，就得用户最终要提交的图片了，多张的话[]必须    
-      };
-
-      $.ajax({
-        type: "POST",
-        url: path + "updateUserAvatar",  //请求路径
-        data: formData,
-        cache: false,
-        contentType: false,
-        processData: false,
-        success: function (data) {
-          //get user info
-          if (200 === data.code) {//这里是后台已经保存成功了，我把新的图片地址存入数据库。直接传送没办法传入userId
-            $(".wsh-personal-avatar div").attr("style", "background:url(" + data.data + ") center no-repeat");//这里是先显示存入成功的图片，实际上这一步执行的时候数据表的存储地址还没有改变。
-            var url = data.data;
-            var avatarData = { "object": "userAvatar", "userId": personalUserId, "url": url };
-            $.ajax({
-              type: "POST",
-              url: path + "changeUserInfo",
-              data: JSON.stringify(avatarData),
-              contentType: "application/json",
-              dataType: "json",
-              success: function (msg) {
-                // location.reload(); 
-              },
-              error: function (err) {
-                alert("上传用户头像失败！")
-              }
-            });
-          } else {
-            alert("上传用户头像失败！")
-          }
-
-        },
-        error: function (err) {
-          alert("上传用户头像失败！")
+<script src="/node_modules/jquery/dist/jquery.js"></script>
+<script>
+  $('#settings_profile_form').on('submit', function (e) {
+    e.preventDefault()
+    var formData = $(this).serialize()
+    $.ajax({
+      url: '/settings/profile',
+      type: 'post',
+      data: formData,
+      dataType: 'json',
+      success: function (data) {
+        var err_code = data.err_code
+        if (err_code === 0) {
+          window.alert('保存成功')
+        } else if (err_code === 500) {
+          window.alert('服务器忙，请稍后重试！')
         }
-      })
+      }
     })
   })
-
 </script>
 
 {{/block}}

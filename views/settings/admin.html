@@ -10,30 +10,48 @@
       <h2>修改密码</h2>
     </div>
     <hr>
-    <form>
+    <form id="admin_form">
       <div class="form-group">
-        <label for="exampleInputPassword1">当前密码</label>
-        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="">
+        <label for="oldPassword">当前密码</label>
+        <input type="password" class="form-control" name="oldpassword">
       </div>
       <div class="form-group">
-        <label for="exampleInputPassword1">新的密码</label>
-        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="">
+        <label for="newPassword">新的密码</label>
+        <input type="password" class="form-control" name="newPassword1">
       </div>
       <div class="form-group">
-        <label for="exampleInputPassword1">确认密码</label>
-        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="">
+        <label for="newPassword">确认密码</label>
+        <input type="password" class="form-control" name="newPassword2">
       </div>
-      <button type="submit" class="btn btn-success">保存</button>
+      <button type="submit" class="btn btn-success">确定修改</button>
     </form>
-    <div class="subhead">
-      <h2>注销账号</h2>
-      <hr>
-    </div>
-    <div>
-      <p>一旦注销，不可找回，请谨慎操作</p>
-      <button class="btn btn-danger">删除</button>
-    </div>
-    <hr>
   </div>
 </section>
+
+<script src="/node_modules/jquery/dist/jquery.js"></script>
+<script>
+  $('#admin_form').on('submit', function (e) {
+    e.preventDefault()
+    var formData = $(this).serialize()
+    $.ajax({
+      url: '/settings/admin',
+      type: 'post',
+      data: formData,
+      dataType: 'json',
+      success: function (data) {
+        var err_code = data.err_code
+        if (err_code === 0) {
+          window.alert('修改成功')
+        } else if (err_code === 1) {
+          window.alert('请输入正确的密码')
+        } else if (err_code === 2) {
+          window.alert('请确保两次密码一致')
+        } else if (err_code === 500) {
+          window.alert('服务器忙，请稍后重试！')
+        }
+      }
+    })
+  })
+</script>
+
 {{/block}}
